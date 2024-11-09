@@ -897,6 +897,11 @@ function createHelpModal() {
               <li><strong>Show Answer:</strong> Show the correct answer to the puzzle.</li>
             </ul>
           </div>
+          <div class="space-y-4">
+          <p>
+            Questions? Issues? Contact paul@playwordfive.com.
+          </p>
+          <div>
         </div>
       </div>
     </div>
