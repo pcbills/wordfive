@@ -366,3 +366,22 @@ body {
 .toast.show {
     opacity: 1;
 }
+/* Book button specific styles */
+.book-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    background-color: #FFD700; /* Yellow background */
+    color: #000000; /* Black text for better contrast on yellow */
+    font-family: var(--font-family);
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: background-color 0.2s ease;
+    margin-left: 8px; /* Add space between share and book buttons */
+}
+
+.book-button:hover {
+    background-color: #FFC000; /* Darker yellow on hover */
+}
