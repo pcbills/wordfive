@@ -931,17 +931,31 @@ document.addEventListener('DOMContentLoaded', createHelpModal);
 // Add share button to DOM after control buttons
 function addShareButton() {
     const controlButtons = document.querySelector('.control-buttons');
-    const shareContainer = document.createElement('div');
-    shareContainer.className = 'share-button-container';
+    const buttonContainer = document.createElement('div');
+    buttonContainer.className = 'share-button-container';
+    buttonContainer.style.display = 'flex'; // Make container flex to align buttons
 
+    // Share button
     const shareButton = document.createElement('button');
     shareButton.className = 'share-button';
     shareButton.textContent = 'Share';
 
-    shareContainer.appendChild(shareButton);
-    controlButtons.parentNode.insertBefore(shareContainer, controlButtons.nextSibling);
+    // Book button
+    const bookButton = document.createElement('button');
+    bookButton.className = 'book-button';
+    bookButton.textContent = 'Get Wordfive puzzle books!';
+    bookButton.addEventListener('click', () => {
+        window.open('https://www.amazon.com/dp/B0BY6PMCKZ?binding=paperback&searchxofy=true&ref_=dbs_s_aps_series_rwt_tpbk&qid=1731136213&sr=8-1', '_blank');
+    });
 
-    // Add click handler
+    // Add buttons to container
+    buttonContainer.appendChild(shareButton);
+    buttonContainer.appendChild(bookButton);
+
+    // Add container after control buttons
+    controlButtons.parentNode.insertBefore(buttonContainer, controlButtons.nextSibling);
+
+    // Add click handler for share button
     shareButton.addEventListener('click', shareGame);
 }
 
