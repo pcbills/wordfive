@@ -1,0 +1,368 @@
+/* Reset and base styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --color-correct: #6aaa64;
+    --color-present: #c9b458;
+    --color-absent: #787c7e;
+    --color-background: #ffffff;
+    --color-border: #d3d6da;
+    --font-family: 'Clear Sans', 'Helvetica Neue', Arial, sans-serif;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--color-background);
+    min-height: 100vh;
+    padding: 10px; /* Reduced padding */
+}
+
+/* Header styles */
+.game-header {
+  text-align: center;
+  padding: 5px 0;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  max-width: 400px;  /* Match game container width */
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Keep game title centered */
+.game-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+  color: #1a1a1b;
+}
+
+#help-button {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0.5rem;
+  border-radius: 9999px;
+  background: white;
+  border: none;
+  cursor: pointer;
+  z-index: 50;
+  transition: background-color 0.2s;
+}
+
+#help-button:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Game container */
+.game-container {
+    max-width: 400px; /* Reduced max-width */
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px; /* Reduced gap */
+}
+
+/* Board styles */
+.board-wrapper {
+  width: 100%;
+  padding: 5px;
+}
+
+#game-board {
+    width: min(400px, 90vw); /* Reduced max width */
+    border-collapse: separate;
+    border-spacing: 3px; /* Reduced spacing */
+    margin: 0 auto;
+    table-layout: fixed;
+}
+
+#game-board td {
+    width: calc((min(400px, 90vw) - 24px) / 5); /* Adjusted for new spacing */
+    height: calc((min(400px, 90vw) - 24px) / 5);
+    border: 2px solid var(--color-border);
+    background-color: white;
+    font-size: 1.5rem; /* Smaller font size */
+    font-weight: bold;
+    text-transform: uppercase;
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* Letter buttons */
+.letter-buttons {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px; /* Reduced gap */
+    width: 100%;
+    max-width: 350px; /* Reduced max-width */
+    margin: 10px auto; /* Reduced margin */
+}
+
+.letter-button {
+    aspect-ratio: 1;
+    border: none;
+    border-radius: 4px;
+    background-color: var(--color-absent);
+    color: white;
+    font-family: var(--font-family);
+    font-size: 1.1rem; /* Smaller font size */
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+    padding: 0;
+    width: 100%;
+}
+/* Add styles for disabled letter buttons */
+.letter-button:disabled {
+    background-color: #d3d6da;
+    opacity: 0.6;
+    cursor: not-allowed;
+    position: relative;
+}
+
+/* Add a visual indicator for disabled buttons */
+.letter-button:disabled::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    height: 2px;
+    background-color: #787c7e;
+}
+
+/* Style for highlighted/selected cells */
+.empty-cell.highlighted {
+    background-color: #f0f0f0;
+    border: 2px solid #6aaa64 !important;
+    box-shadow: 0 0 5px rgba(106, 170, 100, 0.5);
+    transition: all 0.2s ease;
+}
+
+/* Add hover effect for empty cells */
+.empty-cell:hover {
+    background-color: #f8f8f8;
+    cursor: pointer;
+}
+
+/* Control buttons */
+.control-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap; /* Added to handle smaller screens better */
+    justify-content: center;
+}
+
+.control-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    background-color: var(--color-correct);
+    color: white;
+    font-family: var(--font-family);
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+/* New style for show answer button */
+.control-button[data-action="show-answer"] {
+    background-color: #808080; /* Grey color to distinguish it */
+}
+
+/* Hover effect */
+.control-button[data-action="show-answer"]:hover {
+    background-color: #666666;
+}
+
+/* Responsive adjustments */
+@media (max-width: 400px) {
+    .control-button {
+        padding: 8px 16px;
+        font-size: 0.8rem;
+        flex: 1 1 auto;
+    }
+}
+
+/* Win message */
+#win-message {
+    position: fixed;
+    top: 25%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.95);
+    padding: 15px 30px; /* Reduced padding */
+    border-radius: 8px;
+    box-shadow: 0 4px 23px 0 rgba(0, 0, 0, 0.2);
+    font-size: 24px; /* Smaller font size */
+    font-weight: bold;
+    color: var(--color-correct);
+    z-index: 1000;
+}
+
+#help-modal {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 100;  /* Increased to ensure it's above everything */
+  display: none;
+}
+
+#help-modal.hidden {
+  display: none;
+}
+
+#help-modal:not(.hidden) {
+  display: block;
+}
+
+/* Make sure modal content is clickable */
+#help-modal > div > div {
+  pointer-events: auto;
+}
+
+/* Modal content styles */
+.bg-white {
+  background: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  max-width: 28rem;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  margin: auto;
+  position: relative;
+}
+
+/* List styles */
+.space-y-4 > * + * {
+  margin-top: 1rem;
+}
+
+.list-disc {
+  list-style-type: disc;
+  padding-left: 1.25rem;
+}
+
+.list-decimal {
+  list-style-type: decimal;
+  padding-left: 1.25rem;
+}
+/* Update player-placed style to remove !important from color */
+.player-placed {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Style for regular player-placed letters (non-winning state) */
+.player-placed:not(.correct) {
+  color: #0000FF;
+}
+
+/* Style for correct letters in win state */
+.player-placed.correct {
+  color: #4CAF50 !important;
+  font-weight: bold;
+}
+
+/* Highlight styles */
+.highlighted {
+  background-color: #f0f0f0 !important;
+  border: 2px solid #6aaa64 !important;
+  box-shadow: 0 0 5px rgba(106, 170, 100, 0.5) !important;
+}
+
+/* Hover effects */
+.player-placed:hover,
+.empty-cell:hover {
+  background-color: #f8f8f8;
+  cursor: pointer;
+}
+/* Responsive design */
+@media (max-width: 400px) {
+    .game-container {
+        padding: 5px;
+    }
+
+    #game-board td {
+        font-size: 1.25rem;
+    }
+
+    .letter-button {
+        font-size: 1rem;
+    }
+
+    .control-button {
+        padding: 8px 16px;
+        font-size: 0.8rem;
+    }
+    .game-header {
+        width: 90vw;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+      }
+
+    #help-button {
+        right: 0.5rem; /* Reduce right margin on smaller screens */
+      }
+}
+/* Share button specific styles */
+.share-button-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.share-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    background-color: #2196F3; /* Blue background */
+    color: white;
+    font-family: var(--font-family);
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: background-color 0.2s ease;
+}
+
+.share-button:hover {
+    background-color: #1976D2; /* Darker blue on hover */
+}
+
+/* Toast notification styles */
+.toast {
+    position: fixed;
+    bottom: 65%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
+}
+
+.toast.show {
+    opacity: 1;
+}
