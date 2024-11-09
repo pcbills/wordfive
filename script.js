@@ -108,9 +108,35 @@ function setupLetterButtons() {
   elements.gridboard.addEventListener('click', (e) => {
     const cell = e.target;
     if (cell.tagName === 'TD') {
-      // Check if this cell is a valid position for letter placement
       const row = parseInt(cell.dataset.row);
       const col = parseInt(cell.dataset.col);
+
+      // Check if this is a placed letter that can be removed
+      if (cell.classList.contains('player-placed') && state.grid[row][col] !== ' ') {
+        // Get the letter from the cell
+        const letter = state.grid[row][col];
+
+        // Find and re-enable the corresponding letter button
+        Object.values(elements.letterButtons).forEach(button => {
+          if (button.textContent === letter) {
+            button.disabled = false;
+          }
+        });
+
+        // Reset the cell
+        state.grid[row][col] = ' ';
+        cell.textContent = ' ';
+        cell.classList.remove('player-placed', 'correct');
+        cell.classList.add('empty-cell');
+        cell.style.removeProperty('color');
+
+        // Update game state
+        state.filledPositions--;
+        updateLetterButtonStates();
+        return;
+      }
+
+      // Check if this cell is a valid position for letter placement
       const isValidPosition = state.locsToBlankX.some((x, i) => 
         x === row && state.locsToBlankY[i] === col
       );
@@ -132,8 +158,8 @@ function setupLetterButtons() {
     }
   });
 
-  // Letter button click handlers remain the same
-Object.values(elements.letterButtons).forEach(button => {
+  // Letter button click handlers
+  Object.values(elements.letterButtons).forEach(button => {
     button.addEventListener('click', () => {
       if (state.selectedCell) {
         const rowIndex = parseInt(state.selectedCell.dataset.row);
@@ -141,22 +167,11 @@ Object.values(elements.letterButtons).forEach(button => {
 
         // Update the cell with new letter
         state.selectedCell.textContent = button.textContent;
-
-        // Remove any existing color styles
         state.selectedCell.style.removeProperty('color');
-
-        // Remove correct class if it exists
         state.selectedCell.classList.remove('correct');
-
-        // Add player-placed class
         state.selectedCell.classList.add('player-placed');
-
         state.grid[rowIndex][cellIndex] = button.textContent;
-
-        // Remove empty-cell class if it exists
         state.selectedCell.classList.remove('empty-cell');
-
-        // Remove highlighting
         state.selectedCell.classList.remove('highlighted');
         state.selectedCell = null;
 
@@ -173,6 +188,51 @@ Object.values(elements.letterButtons).forEach(button => {
     });
   });
 }
+// Update CSS styles to show that placed letters are clickable
+function addLetterRemovalStyles() {
+  const style = document.createElement('style');
+  style.textContent = `
+    .player-placed {
+      cursor: pointer;
+      position: relative;  /* For z-index to work */
+      z-index: 1;         /* Ensure hover effect shows above other styles */
+      transition: all 0.2s ease;
+    }
+
+    .player-placed:hover {
+      background-color: #ffe6e6 !important;  /* Light red background on hover */
+      border-color: #ff9999 !important;      /* Slightly darker border on hover */
+    }
+
+    /* Style for empty cells that can accept letters */
+    .empty-cell {
+      background-color: white !important;
+      cursor: pointer;
+    }
+
+    .empty-cell:hover {
+      background-color: #f0f0f0 !important;
+    }
+
+    /* Maintain highlighted state */
+    .empty-cell.highlighted {
+      background-color: #f0f0f0 !important;
+      border: 2px solid #6aaa64 !important;
+    }
+
+    /* Ensure correct letters maintain their styling */
+    .player-placed.correct {
+      color: #4CAF50 !important;
+    }
+
+    .player-placed.correct:hover {
+      background-color: #e6ffe6 !important;  /* Light green for correct letters */
+      border-color: #4CAF50 !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 // Function to count currently filled positions
 function countFilledPositions() {
   let count = 0;
@@ -754,6 +814,7 @@ async function initializeGame() {
   // Update display
   updateGridDisplay();
   setupLetterButtons();
+  addLetterRemovalStyles();
 }
 // Event Listeners
 elements.newPuzzleButton.addEventListener('click', () => {
