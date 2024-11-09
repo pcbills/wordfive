@@ -966,7 +966,7 @@ function addShareButton() {
 
 // Share functionality
 function shareGame() {
-    const shareText = "Wordsearch meets Sudoku. Try Wordfive!\n\nhttps://playwordfive.com";
+    const shareText = "Word search meets Sudoku. Try Wordfive!\n\nhttps://playwordfive.com";
 
     // Copy to clipboard
     navigator.clipboard.writeText(shareText)
