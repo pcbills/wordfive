@@ -898,9 +898,9 @@ function createHelpModal() {
             </ul>
           </div>
           <div class="space-y-4">
-          <p>
-            Questions? Issues? Contact paul@playwordfive.com.
-          </p>
+            <p>
+              Questions? Issues? Contact paul@playwordfive.com.
+            </p>
           <div>
         </div>
       </div>
