@@ -948,9 +948,9 @@ function addShareButton() {
     // Book button
     const bookButton = document.createElement('button');
     bookButton.className = 'book-button';
-    bookButton.textContent = 'Get Wordfive puzzle books!';
+    bookButton.textContent = 'Get Wordfive volume 6!';
     bookButton.addEventListener('click', () => {
-        window.open('https://www.amazon.com/dp/B0BY6PMCKZ?binding=paperback&searchxofy=true&ref_=dbs_s_aps_series_rwt_tpbk&qid=1731136213&sr=8-1', '_blank');
+        window.open('https://www.amazon.com/dp/B0DNCX4CQ8?ref_=pe_93986420_774957520', '_blank');
     });
 
     // Add buttons to container
