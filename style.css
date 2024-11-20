@@ -371,8 +371,8 @@ body {
     padding: 10px 20px;
     border: none;
     border-radius: 4px;
-    background-color: #FFD700; /* Yellow background */
-    color: #000000; /* Black text for better contrast on yellow */
+    background-color: #6A8EA6; 
+    color: #F5F5F5;
     font-family: var(--font-family);
     font-size: 0.9rem;
     font-weight: bold;
