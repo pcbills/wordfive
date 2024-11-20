@@ -948,9 +948,9 @@ function addShareButton() {
     // Book button
     const bookButton = document.createElement('button');
     bookButton.className = 'book-button';
-    bookButton.textContent = 'Get the new puzzle book!';
+    bookButton.textContent = 'Get cozy';
     bookButton.addEventListener('click', () => {
-        window.open('https://www.amazon.com/dp/B0DNCX4CQ8?ref_=pe_93986420_774957520', '_blank');
+        window.open('https://a.co/d/3vR0uk4', '_blank');
     });
 
     // Add buttons to container
