@@ -965,7 +965,7 @@ function addShareButton() {
     // Add buttons to container
     buttonContainer.appendChild(shareButton);
     buttonContainer.appendChild(bookButton);
-    buttonContainer.appendChild(num5button);
+    buttonContainer.appendChild(num5Button);
 
     // Add container after control buttons
     controlButtons.parentNode.insertBefore(buttonContainer, controlButtons.nextSibling);
