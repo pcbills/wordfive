@@ -106,7 +106,7 @@ body {
     grid-template-columns: repeat(5, 1fr);
     gap: 5px; /* Reduced gap */
     width: 100%;
-    max-width: 350px; /* Reduced max-width */
+    max-width: 400px; /* Reduced max-width */
     margin: 10px auto; /* Reduced margin */
 }
 
