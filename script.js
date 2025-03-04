@@ -27,7 +27,8 @@ const elements = {
   },
   newPuzzleButton: document.getElementById('new-puzzle-button'),
   resetButton: document.getElementById('reset-button'),
-  showAnswerButton: document.getElementById('show-answer-button')
+  showAnswerButton: document.getElementById('show-answer-button'),
+  tryNumberfiveButton: document.getElementById('try-numberfive-button')
 };
 
 // Load word list
@@ -999,6 +1000,14 @@ function showToast(message) {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
     }, 2000);
+    // Numberfive button
+    const tryNumberfiveButton = document.getElementById('try-numberfive-button');
+      if (tryNumberfiveButton) {
+          tryNumberfiveButton.addEventListener('click', function() {
+              window.open('https://playnumberfive.com', '_blank');
+          });
+      }
+  });
 }
 // Call addShareButton for initial setup
 document.addEventListener('DOMContentLoaded', addShareButton);
