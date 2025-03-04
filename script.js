@@ -830,6 +830,25 @@ elements.showAnswerButton.addEventListener('click', showAnswer);
 // Call the main function to initialize
 initializeGame();
 
+// Try Numberfive button event listener - defined here to ensure it's added early
+if (elements.tryNumberfiveButton) {
+  elements.tryNumberfiveButton.addEventListener('click', () => {
+    window.open('https://playnumberfive.com', '_blank');
+  });
+} else {
+  // If button isn't found yet, try to find it again after DOM is fully loaded
+  document.addEventListener('DOMContentLoaded', () => {
+    const tryNumberfiveButton = document.getElementById('try-numberfive-button');
+    if (tryNumberfiveButton) {
+      tryNumberfiveButton.addEventListener('click', () => {
+        window.open('https://playnumberfive.com', '_blank');
+      });
+    } else {
+      console.log('Try Numberfive button not found in DOM');
+    }
+  });
+}
+
 // Create and append help modal to document
 function createHelpModal() {
   // Create container for help button and modal
