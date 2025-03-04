@@ -827,9 +827,6 @@ elements.newPuzzleButton.addEventListener('click', () => {
 elements.resetButton.addEventListener('click', resetLetterButtons);
 elements.showAnswerButton.addEventListener('click', showAnswer);
 
-// Call the main function to initialize
-initializeGame();
-
 // Try Numberfive button event listener - defined here to ensure it's added early
 if (elements.tryNumberfiveButton) {
   elements.tryNumberfiveButton.addEventListener('click', () => {
@@ -848,6 +845,9 @@ if (elements.tryNumberfiveButton) {
     }
   });
 }
+
+// Call the main function to initialize
+initializeGame();
 
 // Create and append help modal to document
 function createHelpModal() {
