@@ -963,13 +963,6 @@ function addShareButton() {
 
     // Add click handler for share button
     shareButton.addEventListener('click', shareGame);
-    // Numberfive button
-    const tryNumberfiveButton = document.getElementById('try-numberfive-button');
-      if (tryNumberfiveButton) {
-          tryNumberfiveButton.addEventListener('click', function() {
-              window.open('https://playnumberfive.com', '_blank');
-          });
-      }
 }
 
 // Share functionality
