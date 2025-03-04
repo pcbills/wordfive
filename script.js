@@ -963,6 +963,13 @@ function addShareButton() {
 
     // Add click handler for share button
     shareButton.addEventListener('click', shareGame);
+    // Numberfive button
+    const tryNumberfiveButton = document.getElementById('try-numberfive-button');
+      if (tryNumberfiveButton) {
+          tryNumberfiveButton.addEventListener('click', function() {
+              window.open('https://playnumberfive.com', '_blank');
+          });
+      }
 }
 
 // Share functionality
@@ -1000,14 +1007,6 @@ function showToast(message) {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
     }, 2000);
-    // Numberfive button
-    const tryNumberfiveButton = document.getElementById('try-numberfive-button');
-      if (tryNumberfiveButton) {
-          tryNumberfiveButton.addEventListener('click', function() {
-              window.open('https://playnumberfive.com', '_blank');
-          });
-      }
-  });
 }
 // Call addShareButton for initial setup
 document.addEventListener('DOMContentLoaded', addShareButton);
