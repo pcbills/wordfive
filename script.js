@@ -827,25 +827,6 @@ elements.newPuzzleButton.addEventListener('click', () => {
 elements.resetButton.addEventListener('click', resetLetterButtons);
 elements.showAnswerButton.addEventListener('click', showAnswer);
 
-// Try Numberfive button event listener - defined here to ensure it's added early
-if (elements.tryNumberfiveButton) {
-  elements.tryNumberfiveButton.addEventListener('click', () => {
-    window.open('https://playnumberfive.com', '_blank');
-  });
-} else {
-  // If button isn't found yet, try to find it again after DOM is fully loaded
-  document.addEventListener('DOMContentLoaded', () => {
-    const tryNumberfiveButton = document.getElementById('try-numberfive-button');
-    if (tryNumberfiveButton) {
-      tryNumberfiveButton.addEventListener('click', () => {
-        window.open('https://playnumberfive.com', '_blank');
-      });
-    } else {
-      console.log('Try Numberfive button not found in DOM');
-    }
-  });
-}
-
 // Call the main function to initialize
 initializeGame();
 
@@ -972,10 +953,19 @@ function addShareButton() {
     bookButton.addEventListener('click', () => {
         window.open('https://a.co/d/3vR0uk4', '_blank');
     });
+  
+    // Numberfive button
+    const num5Button = document.createElement('button');
+    bookButton.className = 'try-numberfive-button';
+    bookButton.textContent = 'Try Numberfive!';
+    bookButton.addEventListener('click', () => {
+        window.open('https://playnumberfive.com', '_blank');
+    });
 
     // Add buttons to container
     buttonContainer.appendChild(shareButton);
     buttonContainer.appendChild(bookButton);
+    buttonContainer.appendChild(num5button);
 
     // Add container after control buttons
     controlButtons.parentNode.insertBefore(buttonContainer, controlButtons.nextSibling);
