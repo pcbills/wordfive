@@ -959,7 +959,7 @@ function addShareButton() {
     num5Button.className = 'try-numberfive-button';
     num5Button.textContent = 'Play other fivegames!';
     num5Button.addEventListener('click', () => {
-        window.open('https://playfivegames.com', '_blank');
+        window.open('https://playfivegames.com');
     });
 
     // Add buttons to container
