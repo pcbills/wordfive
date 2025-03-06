@@ -957,9 +957,9 @@ function addShareButton() {
     // Numberfive button
     const num5Button = document.createElement('button');
     num5Button.className = 'try-numberfive-button';
-    num5Button.textContent = 'Try Numberfive!';
+    num5Button.textContent = 'Play other fivegames!';
     num5Button.addEventListener('click', () => {
-        window.open('https://playnumberfive.com', '_blank');
+        window.open('https://playfivegames.com', '_blank');
     });
 
     // Add buttons to container
