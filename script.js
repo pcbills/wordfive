@@ -949,17 +949,17 @@ function addShareButton() {
     // Book button
     const bookButton = document.createElement('button');
     bookButton.className = 'book-button';
-    bookButton.textContent = 'Get cozy';
+    bookButton.textContent = 'Go on an adventure!';
     bookButton.addEventListener('click', () => {
-        window.open('https://a.co/d/3vR0uk4', '_blank');
+        window.open('https://a.co/d/7X7Gbvs', '_blank');
     });
   
     // Numberfive button
     const num5Button = document.createElement('button');
     num5Button.className = 'try-numberfive-button';
-    num5Button.textContent = 'Play other fivegames!';
+    num5Button.textContent = 'Try Numberfive!';
     num5Button.addEventListener('click', () => {
-        window.open('https://playfivegames.com');
+        window.open('https://playnumberfive.com', '_blank');
     });
 
     // Add buttons to container
