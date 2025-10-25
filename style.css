@@ -46,9 +46,9 @@ body {
   color: #1a1a1b;
 }
 
-#help-button {
+#help-button,
+#stats-button {
   position: absolute;
-  right: 1rem;
   top: 50%;
   transform: translateY(-50%);
   padding: 0.5rem;
@@ -60,7 +60,16 @@ body {
   transition: background-color 0.2s;
 }
 
-#help-button:hover {
+#help-button {
+  right: 1rem;
+}
+
+#stats-button {
+  right: 3.5rem;
+}
+
+#help-button:hover,
+#stats-button:hover {
   background-color: rgba(0, 0, 0, 0.1);
 }
 
@@ -215,7 +224,8 @@ body {
     z-index: 1000;
 }
 
-#help-modal {
+#help-modal,
+#stats-modal {
   position: fixed;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.5);
@@ -223,17 +233,43 @@ body {
   display: none;
 }
 
-#help-modal.hidden {
+#help-modal.hidden,
+#stats-modal.hidden {
   display: none;
 }
 
-#help-modal:not(.hidden) {
+#help-modal:not(.hidden),
+#stats-modal:not(.hidden) {
   display: block;
 }
 
 /* Make sure modal content is clickable */
-#help-modal > div > div {
+#help-modal > div > div,
+#stats-modal > div > div {
   pointer-events: auto;
+}
+
+/* Statistics display styles */
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.stat-item:last-child {
+  border-bottom: none;
+}
+
+.stat-label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.stat-value {
+  font-weight: 700;
+  color: #6aaa64;
+  font-size: 1.25rem;
 }
 
 /* Modal content styles */
