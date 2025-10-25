@@ -8,11 +8,12 @@ const state = {
   finalWordCount: 0,
   selectedCell: null,
   locsToBlankX: [],
-  locsToBlankY: [], 
+  locsToBlankY: [],
   lettersRemoved: [],
   correctWord: '', // Will store the sixth word for checking
   filledPositions: 0,// Track how many blanks have been filled
-  wordPositions: []
+  wordPositions: [],
+  gameStartTime: null // Track when the current puzzle started
 };
 
 // DOM Elements 
@@ -33,6 +34,48 @@ const elements = {
 
 // Load word list
 import { wordList } from './wordList.js';
+
+// Statistics Management
+function getStatistics() {
+  const defaultStats = {
+    puzzlesSolved: 0,
+    totalSolveTime: 0, // in seconds
+    shortestSolveTime: null // in seconds
+  };
+
+  const saved = localStorage.getItem('wordfive-statistics');
+  return saved ? JSON.parse(saved) : defaultStats;
+}
+
+function saveStatistics(stats) {
+  localStorage.setItem('wordfive-statistics', JSON.stringify(stats));
+}
+
+function updateStatistics(solveTimeSeconds) {
+  const stats = getStatistics();
+
+  stats.puzzlesSolved++;
+  stats.totalSolveTime += solveTimeSeconds;
+
+  if (stats.shortestSolveTime === null || solveTimeSeconds < stats.shortestSolveTime) {
+    stats.shortestSolveTime = solveTimeSeconds;
+  }
+
+  saveStatistics(stats);
+  return stats;
+}
+
+function formatTime(seconds) {
+  if (seconds === null) return 'N/A';
+
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+
+  if (mins === 0) {
+    return `${secs}s`;
+  }
+  return `${mins}m ${secs}s`;
+}
 
 // Create initial empty grid
 function createEmptyGrid() {
@@ -314,6 +357,12 @@ function checkWinCondition() {
 
   // Check if player's word matches the correct word (case-insensitive)
   if (playerWord.toLowerCase() === state.correctWord.toLowerCase()) {
+    // Calculate solve time
+    const solveTimeSeconds = Math.floor((Date.now() - state.gameStartTime) / 1000);
+
+    // Update statistics
+    updateStatistics(solveTimeSeconds);
+
     // Highlight correct letters in green
     highlightCorrectLetters();
     // Highlight the first five words
@@ -428,6 +477,9 @@ function resetLetterButtons() {
 
   updateGridDisplay();
   state.filledPositions = 0;
+
+  // Reset game start time
+  state.gameStartTime = Date.now();
 
   // Re-enable all letter buttons
   Object.values(elements.letterButtons).forEach(button => {
@@ -800,7 +852,8 @@ async function initializeGame() {
     lettersRemoved: [],
     correctWord: '',
     filledPositions: 0,
-    wordList: [...wordList]
+    wordList: [...wordList],
+    gameStartTime: Date.now() // Set game start time
   });
 
   // Place initial words
@@ -922,17 +975,105 @@ function createHelpModal() {
     modal.classList.remove('hidden');
   });
 
-  // Click anywhere outside to close
-  document.addEventListener('click', () => {
-    const modal = document.getElementById('help-modal');
-    if (!modal.classList.contains('hidden')) {
-      modal.classList.add('hidden');
-    }
-  });
+  // Click anywhere outside to close (handled globally below)
 }
 
 // Initialize help system
 document.addEventListener('DOMContentLoaded', createHelpModal);
+
+// Create and append statistics modal to document
+function createStatsModal() {
+  // Find the header element
+  const header = document.querySelector('.game-header');
+  if (!header) return;
+
+  // Create stats button
+  const statsButton = document.createElement('button');
+  statsButton.id = 'stats-button';
+  statsButton.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="18" y1="20" x2="18" y2="10"></line>
+      <line x1="12" y1="20" x2="12" y2="4"></line>
+      <line x1="6" y1="20" x2="6" y2="14"></line>
+    </svg>
+  `;
+  header.appendChild(statsButton);
+
+  // Create modal
+  const modal = document.createElement('div');
+  modal.id = 'stats-modal';
+  modal.className = 'hidden fixed inset-0 bg-black bg-opacity-50 z-40';
+  modal.innerHTML = `
+    <div class="fixed inset-0 flex items-center justify-center p-4">
+      <div class="bg-white rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto relative">
+        <h2 class="text-xl font-bold mb-4">Statistics</h2>
+        <div id="stats-content" class="space-y-2">
+          <!-- Statistics will be populated here -->
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  // Stop propagation on modal content to prevent closing when clicking inside
+  const modalContent = modal.querySelector('.bg-white');
+  modalContent.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
+
+  // Add event listeners
+  statsButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    updateStatsDisplay();
+    const modal = document.getElementById('stats-modal');
+    modal.classList.remove('hidden');
+  });
+
+}
+
+// Global click handler to close modals when clicking outside
+document.addEventListener('click', () => {
+  const helpModal = document.getElementById('help-modal');
+  const statsModal = document.getElementById('stats-modal');
+
+  if (helpModal && !helpModal.classList.contains('hidden')) {
+    helpModal.classList.add('hidden');
+  }
+  if (statsModal && !statsModal.classList.contains('hidden')) {
+    statsModal.classList.add('hidden');
+  }
+});
+
+// Update statistics display
+function updateStatsDisplay() {
+  const stats = getStatistics();
+  const statsContent = document.getElementById('stats-content');
+
+  if (!statsContent) return;
+
+  // Calculate average solve time
+  const avgSolveTime = stats.puzzlesSolved > 0
+    ? stats.totalSolveTime / stats.puzzlesSolved
+    : null;
+
+  statsContent.innerHTML = `
+    <div class="stat-item">
+      <div class="stat-label">Puzzles Solved</div>
+      <div class="stat-value">${stats.puzzlesSolved}</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Average Solve Time</div>
+      <div class="stat-value">${formatTime(avgSolveTime)}</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-label">Shortest Solve Time</div>
+      <div class="stat-value">${formatTime(stats.shortestSolveTime)}</div>
+    </div>
+  `;
+}
+
+// Initialize statistics system
+document.addEventListener('DOMContentLoaded', createStatsModal);
 
 // Add share button to DOM after control buttons
 function addShareButton() {
