@@ -78,6 +78,17 @@ function saveDifficulty(difficulty) {
   localStorage.setItem('wordfive-difficulty', difficulty);
 }
 
+// Reset statistics
+function resetStatistics() {
+  const defaultStats = {
+    puzzlesSolved: 0,
+    totalSolveTime: 0,
+    shortestSolveTime: null
+  };
+  saveStatistics(defaultStats);
+  return defaultStats;
+}
+
 function updateStatistics(solveTimeSeconds) {
   const stats = getStatistics();
 
@@ -1108,6 +1119,11 @@ function updateStatsDisplay() {
         <option value="hard" ${currentDifficulty === 'hard' ? 'selected' : ''}>Hard (3500+ words)</option>
       </select>
     </div>
+    <div style="margin-top: 20px;">
+      <button id="reset-stats-button" style="width: 100%; padding: 10px; background-color: #ef4444; color: white; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; font-weight: 500;">
+        Reset Statistics
+      </button>
+    </div>
   `;
 
   // Add event listener for difficulty change
@@ -1118,6 +1134,18 @@ function updateStatsDisplay() {
       saveDifficulty(newDifficulty);
       // Show a message that the change will take effect on next puzzle
       alert('Difficulty changed! Start a new puzzle to use the selected difficulty.');
+    });
+  }
+
+  // Add event listener for reset stats button
+  const resetStatsButton = document.getElementById('reset-stats-button');
+  if (resetStatsButton) {
+    resetStatsButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (confirm('Are you sure you want to reset all statistics? This action cannot be undone.')) {
+        resetStatistics();
+        updateStatsDisplay();
+      }
     });
   }
 }
