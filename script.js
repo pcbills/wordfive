@@ -1,3 +1,8 @@
+// Load word lists
+import { wordList as wordListHard } from './wordList.js';
+import { wordList as wordListMedium } from './wordList-medium.js';
+import { wordList as wordListEasy } from './wordList-easy.js';
+
 // Core game state
 const state = {
   grid: [],
@@ -16,12 +21,12 @@ const state = {
   gameStartTime: null // Track when the current puzzle started
 };
 
-// DOM Elements 
+// DOM Elements
 const elements = {
   gridboard: document.getElementById('game-board'),
   letterButtons: {
     but1: document.getElementById('let1'),
-    but2: document.getElementById('let2'), 
+    but2: document.getElementById('let2'),
     but3: document.getElementById('let3'),
     but4: document.getElementById('let4'),
     but5: document.getElementById('let5')
@@ -32,8 +37,20 @@ const elements = {
   tryNumberfiveButton: document.getElementById('try-numberfive-button')
 };
 
-// Load word list
-import { wordList } from './wordList.js';
+// Function to get current word list based on difficulty
+function getCurrentWordList() {
+  const difficulty = getDifficulty();
+  switch (difficulty) {
+    case 'easy':
+      return wordListEasy;
+    case 'medium':
+      return wordListMedium;
+    case 'hard':
+      return wordListHard;
+    default:
+      return wordListMedium;
+  }
+}
 
 // Statistics Management
 function getStatistics() {
@@ -49,6 +66,16 @@ function getStatistics() {
 
 function saveStatistics(stats) {
   localStorage.setItem('wordfive-statistics', JSON.stringify(stats));
+}
+
+// Difficulty Management
+function getDifficulty() {
+  const saved = localStorage.getItem('wordfive-difficulty');
+  return saved || 'medium'; // Default to medium
+}
+
+function saveDifficulty(difficulty) {
+  localStorage.setItem('wordfive-difficulty', difficulty);
 }
 
 function updateStatistics(solveTimeSeconds) {
@@ -838,6 +865,8 @@ function fillRemainingSpaces() {
 async function initializeGame() {
   // Create empty grid first
   createEmptyGrid();
+  // Get the appropriate word list based on difficulty
+  const currentWordList = getCurrentWordList();
   // Reset state
   Object.assign(state, {
     grid: Array(5).fill().map(() => Array(5).fill('_')),
@@ -852,7 +881,7 @@ async function initializeGame() {
     lettersRemoved: [],
     correctWord: '',
     filledPositions: 0,
-    wordList: [...wordList],
+    wordList: [...currentWordList],
     gameStartTime: Date.now() // Set game start time
   });
 
@@ -1056,6 +1085,8 @@ function updateStatsDisplay() {
     ? stats.totalSolveTime / stats.puzzlesSolved
     : null;
 
+  const currentDifficulty = getDifficulty();
+
   statsContent.innerHTML = `
     <div class="stat-item">
       <div class="stat-label">Puzzles Solved</div>
@@ -1069,7 +1100,26 @@ function updateStatsDisplay() {
       <div class="stat-label">Shortest Solve Time</div>
       <div class="stat-value">${formatTime(stats.shortestSolveTime)}</div>
     </div>
+    <div class="stat-item" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+      <div class="stat-label">Puzzle Difficulty</div>
+      <select id="difficulty-select" class="difficulty-select" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 14px; margin-top: 8px;">
+        <option value="easy" ${currentDifficulty === 'easy' ? 'selected' : ''}>Easy (500 words)</option>
+        <option value="medium" ${currentDifficulty === 'medium' ? 'selected' : ''}>Medium (1000 words)</option>
+        <option value="hard" ${currentDifficulty === 'hard' ? 'selected' : ''}>Hard (3500+ words)</option>
+      </select>
+    </div>
   `;
+
+  // Add event listener for difficulty change
+  const difficultySelect = document.getElementById('difficulty-select');
+  if (difficultySelect) {
+    difficultySelect.addEventListener('change', (e) => {
+      const newDifficulty = e.target.value;
+      saveDifficulty(newDifficulty);
+      // Show a message that the change will take effect on next puzzle
+      alert('Difficulty changed! Start a new puzzle to use the selected difficulty.');
+    });
+  }
 }
 
 // Initialize statistics system
