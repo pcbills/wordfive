@@ -241,7 +241,20 @@ body {
 
 #help-modal:not(.hidden),
 #stats-modal:not(.hidden) {
-  display: block;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Modal inner container for vertical centering */
+#help-modal > div,
+#stats-modal > div {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 1rem;
 }
 
 /* Make sure modal content is clickable */
