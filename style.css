@@ -19,6 +19,7 @@ body {
     background-color: var(--color-background);
     min-height: 100vh;
     padding: 10px; /* Reduced padding */
+    padding-top: 30px; /* Added top spacing for better positioning on devices */
 }
 
 /* Header styles */
