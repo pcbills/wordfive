@@ -1165,26 +1165,38 @@ function addShareButton() {
     shareButton.className = 'share-button';
     shareButton.textContent = 'Share';
 
-    // Book button
-    const bookButton = document.createElement('button');
-    bookButton.className = 'book-button';
-    bookButton.textContent = 'Go on an adventure!';
-    bookButton.addEventListener('click', () => {
-        window.open('https://a.co/d/7X7Gbvs', '_blank');
-    });
-  
-    // Numberfive button
-    const num5Button = document.createElement('button');
-    num5Button.className = 'try-numberfive-button';
-    num5Button.textContent = 'Try Numberfive!';
-    num5Button.addEventListener('click', () => {
-        window.open('https://playnumberfive.com', '_blank');
-    });
+    // App Store Badge - Apple badge comes first per guidelines
+    const appStoreLink = document.createElement('a');
+    appStoreLink.href = 'https://apps.apple.com/us/app/wordfive-word-search-sudoku/id6755621635';
+    appStoreLink.target = '_blank';
+    appStoreLink.rel = 'noopener noreferrer';
+    appStoreLink.className = 'app-store-badge-link';
+
+    const appStoreBadge = document.createElement('img');
+    appStoreBadge.src = 'Download_on_the_App_Store_Badge_US-UK_RGB_blk_092917.svg';
+    appStoreBadge.alt = 'Download on the App Store';
+    appStoreBadge.className = 'store-badge';
+
+    appStoreLink.appendChild(appStoreBadge);
+
+    // Google Play Badge
+    const googlePlayLink = document.createElement('a');
+    googlePlayLink.href = 'https://play.google.com/store/apps/details?id=com.playwordfive.wordfive';
+    googlePlayLink.target = '_blank';
+    googlePlayLink.rel = 'noopener noreferrer';
+    googlePlayLink.className = 'google-play-badge-link';
+
+    const googlePlayBadge = document.createElement('img');
+    googlePlayBadge.src = 'GetItOnGooglePlay_Badge_Web_color_English.svg';
+    googlePlayBadge.alt = 'Get it on Google Play';
+    googlePlayBadge.className = 'store-badge';
+
+    googlePlayLink.appendChild(googlePlayBadge);
 
     // Add buttons to container
     buttonContainer.appendChild(shareButton);
-    buttonContainer.appendChild(bookButton);
-    buttonContainer.appendChild(num5Button);
+    buttonContainer.appendChild(appStoreLink);
+    buttonContainer.appendChild(googlePlayLink);
 
     // Add container after control buttons
     controlButtons.parentNode.insertBefore(buttonContainer, controlButtons.nextSibling);
