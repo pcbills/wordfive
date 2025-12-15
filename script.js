@@ -1198,23 +1198,6 @@ function addShareButton() {
     promoText.className = 'app-promo-text';
     promoText.textContent = 'Get the FREE app for improved gameplay, more stats, unlockable colors, customizable win messages, and more!';
 
-    // Curved arrow SVG
-    const arrowContainer = document.createElement('div');
-    arrowContainer.className = 'curved-arrow-container';
-    arrowContainer.innerHTML = `
-        <svg class="curved-arrow" viewBox="0 0 150 120" xmlns="http://www.w3.org/2000/svg">
-            <!-- Curved path from bottom-right to top-center -->
-            <path d="M 130 100 Q 140 50, 75 10"
-                  stroke="#e63946"
-                  stroke-width="3"
-                  fill="none"
-                  stroke-linecap="round"/>
-            <!-- Arrowhead -->
-            <polygon points="75,10 70,20 80,20"
-                     fill="#e63946"/>
-        </svg>
-    `;
-
     // Share button container
     const shareContainer = document.createElement('div');
     shareContainer.className = 'share-container';
