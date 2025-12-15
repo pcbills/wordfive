@@ -1213,11 +1213,8 @@ function addShareButton() {
     // Add promotional text after the button container
     controlButtons.parentNode.insertBefore(promoText, buttonContainer.nextSibling);
 
-    // Add curved arrow after promotional text
-    controlButtons.parentNode.insertBefore(arrowContainer, promoText.nextSibling);
-
-    // Add share button container after arrow
-    controlButtons.parentNode.insertBefore(shareContainer, arrowContainer.nextSibling);
+    // Add share button container after promotional text
+    controlButtons.parentNode.insertBefore(shareContainer, promoText.nextSibling);
 
     // Add click handler for share button
     shareButton.addEventListener('click', shareGame);
