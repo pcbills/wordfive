@@ -1198,8 +1198,12 @@ function addShareButton() {
     promoText.className = 'app-promo-text';
     promoText.textContent = 'Get the free app for more statistics, unlockable victory colors, fully customizable win messages, and more!';
 
-    // Add buttons to container
-    buttonContainer.appendChild(shareButton);
+    // Share button container
+    const shareContainer = document.createElement('div');
+    shareContainer.className = 'share-container';
+    shareContainer.appendChild(shareButton);
+
+    // Add app store badges to container
     buttonContainer.appendChild(appStoreLink);
     buttonContainer.appendChild(googlePlayLink);
 
@@ -1208,6 +1212,9 @@ function addShareButton() {
 
     // Add promotional text after the button container
     controlButtons.parentNode.insertBefore(promoText, buttonContainer.nextSibling);
+
+    // Add share button container after promotional text
+    controlButtons.parentNode.insertBefore(shareContainer, promoText.nextSibling);
 
     // Add click handler for share button
     shareButton.addEventListener('click', shareGame);

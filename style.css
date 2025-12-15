@@ -382,6 +382,14 @@ body {
     flex-wrap: wrap; /* Allow wrapping on smaller screens */
 }
 
+.share-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+}
+
 .share-button {
     padding: 10px 20px;
     border: none;
