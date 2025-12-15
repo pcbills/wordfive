@@ -1196,7 +1196,7 @@ function addShareButton() {
     // Promotional text
     const promoText = document.createElement('p');
     promoText.className = 'app-promo-text';
-    promoText.textContent = 'Get the free app for more statistics, unlockable victory colors, fully customizable win messages, and more!';
+    promoText.textContent = 'Get the FREE app for improved gameplay, more stats, unlockable colors, customizable win messages, and more!';
 
     // Share button container
     const shareContainer = document.createElement('div');
