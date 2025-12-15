@@ -376,8 +376,10 @@ body {
     width: 100%;
     display: flex;
     justify-content: center;
+    align-items: center;
     margin-top: 10px;
     gap: 8px;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
 }
 
 .share-button {
@@ -417,56 +419,37 @@ body {
 .toast.show {
     opacity: 1;
 }
-/* Book button specific styles */
-.book-button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    background-color: #9B1631; 
-    color: #F5F5F5;
-    font-family: var(--font-family);
-    font-size: 0.9rem;
-    font-weight: bold;
-    cursor: pointer;
-    text-transform: uppercase;
-    transition: background-color 0.2s ease;
-    margin-left: 8px; /* Add space between share and book buttons */
-}
-/* Cross-promotion container for the Try Numberfive button */
-.cross-promo-container {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    margin-top: 15px;
+/* App Store Badge styles - following Apple and Google guidelines */
+.app-store-badge-link,
+.google-play-badge-link {
+    display: inline-block;
+    /* Clear space equal to one-quarter badge height per guidelines */
+    margin: 0 10px;
+    transition: opacity 0.2s ease;
 }
 
-/* Style for the Try Numberfive button */
-.try-numberfive-button {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    background-color: #9C27B0; /* Purple color to distinguish from other buttons */
-    color: white;
-    font-family: var(--font-family);
-    font-size: 0.9rem;
-    font-weight: bold;
-    cursor: pointer;
-    text-transform: uppercase;
-    transition: background-color 0.2s ease;
+.app-store-badge-link:hover,
+.google-play-badge-link:hover {
+    opacity: 0.8;
 }
 
-.try-numberfive-button:hover {
-    background-color: #7B1FA2; /* Darker purple on hover */
+.store-badge {
+    /* Minimum 40px height per Apple guidelines */
+    height: 40px;
+    width: auto;
+    display: block;
+    /* Prevent image distortion */
+    object-fit: contain;
 }
 
-/* Add this to the responsive section */
+/* Responsive adjustments for app store badges */
 @media (max-width: 400px) {
-    .try-numberfive-button {
-        padding: 8px 16px;
-        font-size: 0.8rem;
+    .store-badge {
+        height: 35px; /* Slightly smaller on mobile but still legible */
     }
-}
 
-.book-button:hover {
-    background-color: #FFC000; /* Darker yellow on hover */
+    .app-store-badge-link,
+    .google-play-badge-link {
+        margin: 0 5px; /* Reduce spacing on smaller screens */
+    }
 }
