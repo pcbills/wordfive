@@ -115,6 +115,105 @@ function formatTime(seconds) {
   return `${mins}m ${secs}s`;
 }
 
+// Timer visibility functions
+function saveTimerVisibility(isVisible) {
+  localStorage.setItem('timerVisible', JSON.stringify(isVisible));
+}
+
+function getTimerVisibility() {
+  const saved = localStorage.getItem('timerVisible');
+  return saved !== null ? JSON.parse(saved) : false;
+}
+
+// Timer display functions
+let timerInterval = null;
+let timerPaused = false;
+
+function createTimerDisplay() {
+  const header = document.querySelector('.game-header');
+  if (!header) return;
+
+  // Check if timer already exists
+  if (document.getElementById('game-timer')) return;
+
+  const timerDiv = document.createElement('div');
+  timerDiv.id = 'game-timer';
+  timerDiv.style.cssText = `
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 18px;
+    color: #22c55e;
+    font-weight: 500;
+    font-family: monospace;
+  `;
+  timerDiv.textContent = '0:00';
+
+  header.appendChild(timerDiv);
+}
+
+function updateTimerDisplay() {
+  const timerDiv = document.getElementById('game-timer');
+  const isVisible = getTimerVisibility();
+
+  if (isVisible) {
+    if (!timerDiv) {
+      createTimerDisplay();
+    } else {
+      timerDiv.style.display = 'block';
+    }
+    startTimerInterval();
+  } else {
+    if (timerDiv) {
+      timerDiv.style.display = 'none';
+    }
+    stopTimerInterval();
+  }
+}
+
+function startTimerInterval() {
+  if (timerInterval) return; // Already running
+
+  timerInterval = setInterval(() => {
+    if (!timerPaused && state.gameStartTime) {
+      const elapsedSeconds = Math.floor((Date.now() - state.gameStartTime) / 1000);
+      updateTimerText(elapsedSeconds);
+    }
+  }, 1000);
+}
+
+function stopTimerInterval() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+
+function pauseTimer() {
+  timerPaused = true;
+}
+
+function resumeTimer() {
+  timerPaused = false;
+}
+
+function resetTimer() {
+  timerPaused = false;
+  const timerDiv = document.getElementById('game-timer');
+  if (timerDiv && getTimerVisibility()) {
+    timerDiv.textContent = '0:00';
+  }
+}
+
+function updateTimerText(seconds) {
+  const timerDiv = document.getElementById('game-timer');
+  if (!timerDiv) return;
+
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  timerDiv.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
 // Create initial empty grid
 function createEmptyGrid() {
   // Clear existing grid content
@@ -311,6 +410,27 @@ function addLetterRemovalStyles() {
       background-color: #e6ffe6 !important;  /* Light green for correct letters */
       border-color: #4CAF50 !important;
     }
+
+    /* Toggle switch styles */
+    .toggle-switch input:checked + .toggle-slider {
+      background-color: #22c55e;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    .toggle-switch input:checked + .toggle-slider:before {
+      transform: translateX(26px);
+    }
   `;
   document.head.appendChild(style);
 }
@@ -397,6 +517,9 @@ function checkWinCondition() {
   if (playerWord.toLowerCase() === state.correctWord.toLowerCase()) {
     // Calculate solve time
     const solveTimeSeconds = Math.floor((Date.now() - state.gameStartTime) / 1000);
+
+    // Pause the timer
+    pauseTimer();
 
     // Update statistics
     updateStatistics(solveTimeSeconds);
@@ -518,6 +641,10 @@ function resetLetterButtons() {
 
   // Reset game start time
   state.gameStartTime = Date.now();
+
+  // Reset and resume timer
+  resetTimer();
+  resumeTimer();
 
   // Re-enable all letter buttons
   Object.values(elements.letterButtons).forEach(button => {
@@ -909,6 +1036,10 @@ async function initializeGame() {
   updateGridDisplay();
   setupLetterButtons();
   addLetterRemovalStyles();
+
+  // Reset and resume timer for the new puzzle
+  resetTimer();
+  resumeTimer();
 }
 // Event Listeners
 elements.newPuzzleButton.addEventListener('click', () => {
@@ -1119,6 +1250,15 @@ function updateStatsDisplay() {
         <option value="hard" ${currentDifficulty === 'hard' ? 'selected' : ''}>Hard (3500+ words)</option>
       </select>
     </div>
+    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+        <label for="timer-toggle" style="font-size: 14px; font-weight: 500; color: #333;">Show Timer</label>
+        <label class="toggle-switch" style="position: relative; display: inline-block; width: 50px; height: 24px;">
+          <input type="checkbox" id="timer-toggle" style="opacity: 0; width: 0; height: 0;">
+          <span class="toggle-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px;"></span>
+        </label>
+      </div>
+    </div>
     <div style="margin-top: 20px;">
       <button id="reset-stats-button" style="width: 100%; padding: 10px; background-color: #ef4444; color: white; border: none; border-radius: 4px; font-size: 14px; cursor: pointer; font-weight: 500;">
         Reset Statistics
@@ -1148,10 +1288,29 @@ function updateStatsDisplay() {
       }
     });
   }
+
+  // Add event listener for timer toggle
+  const timerToggle = document.getElementById('timer-toggle');
+  if (timerToggle) {
+    // Set initial state
+    timerToggle.checked = getTimerVisibility();
+
+    timerToggle.addEventListener('change', (e) => {
+      e.stopPropagation();
+      const isVisible = e.target.checked;
+      saveTimerVisibility(isVisible);
+      updateTimerDisplay();
+    });
+  }
 }
 
 // Initialize statistics system
 document.addEventListener('DOMContentLoaded', createStatsModal);
+
+// Initialize timer display
+document.addEventListener('DOMContentLoaded', () => {
+  updateTimerDisplay();
+});
 
 // Add share button to DOM after control buttons
 function addShareButton() {
