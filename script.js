@@ -2,6 +2,7 @@
 import { wordList as wordListHard } from './wordList.js';
 import { wordList as wordListMedium } from './wordList-medium.js';
 import { wordList as wordListEasy } from './wordList-easy.js';
+import { wordListFull } from './wordList-full.js';
 
 // Core game state
 const state = {
@@ -46,7 +47,8 @@ function getCurrentWordList() {
     case 'medium':
       return wordListMedium;
     case 'hard':
-      return wordListHard;
+    case 'veryhard':
+      return wordListFull;
     default:
       return wordListMedium;
   }
@@ -292,35 +294,57 @@ function setupLetterButtons() {
       const row = parseInt(cell.dataset.row);
       const col = parseInt(cell.dataset.col);
 
-      // Check if this is a placed letter that can be removed
-      if (cell.classList.contains('player-placed') && state.grid[row][col] !== ' ') {
-        // Get the letter from the cell
-        const letter = state.grid[row][col];
-
-        // Find and re-enable the corresponding letter button
-        Object.values(elements.letterButtons).forEach(button => {
-          if (button.textContent === letter) {
-            button.disabled = false;
-          }
-        });
-
-        // Reset the cell
-        state.grid[row][col] = ' ';
-        cell.textContent = ' ';
-        cell.classList.remove('player-placed', 'correct');
-        cell.classList.add('empty-cell');
-        cell.style.removeProperty('color');
-
-        // Update game state
-        state.filledPositions--;
-        updateLetterButtonStates();
-        return;
-      }
-
       // Check if this cell is a valid position for letter placement
-      const isValidPosition = state.locsToBlankX.some((x, i) => 
+      const isValidPosition = state.locsToBlankX.some((x, i) =>
         x === row && state.locsToBlankY[i] === col
       );
+
+      // Handle clicking on a filled square - remove the letter and re-enable button
+      // In Very Hard mode, just select the cell instead of removing (allows editing)
+      if (isValidPosition && cell.classList.contains('player-placed') && state.grid[row][col] !== ' ') {
+        if (isVeryHardMode()) {
+          // In Very Hard mode, select the cell for editing
+          if (state.selectedCell) {
+            state.selectedCell.classList.remove('highlighted');
+          }
+
+          // Always remove any existing highlighted class from all cells
+          const allCells = elements.gridboard.getElementsByTagName('td');
+          Array.from(allCells).forEach(c => c.classList.remove('highlighted'));
+
+          cell.classList.add('highlighted');
+          state.selectedCell = cell;
+
+          // Focus the hidden input
+          const hiddenInput = document.getElementById('veryhard-keyboard-input');
+          if (hiddenInput) {
+            hiddenInput.focus();
+          }
+        } else {
+          // Normal mode: remove the letter
+          // Get the letter from the cell
+          const letter = state.grid[row][col];
+
+          // Find and re-enable the corresponding letter button
+          Object.values(elements.letterButtons).forEach(button => {
+            if (button.textContent === letter) {
+              button.disabled = false;
+            }
+          });
+
+          // Reset the cell
+          state.grid[row][col] = ' ';
+          cell.textContent = ' ';
+          cell.classList.remove('player-placed', 'correct');
+          cell.classList.add('empty-cell');
+          cell.style.removeProperty('color');
+
+          // Update game state
+          state.filledPositions--;
+          updateLetterButtonStates();
+        }
+        return;
+      }
 
       if (isValidPosition) {
         // Remove highlight from previously selected cell
@@ -335,6 +359,14 @@ function setupLetterButtons() {
         // Add highlight to newly selected cell
         cell.classList.add('highlighted');
         state.selectedCell = cell;
+
+        // In Very Hard mode, focus the hidden input to activate keyboard
+        if (isVeryHardMode()) {
+          const hiddenInput = document.getElementById('veryhard-keyboard-input');
+          if (hiddenInput) {
+            hiddenInput.focus();
+          }
+        }
       }
     }
   });
@@ -363,7 +395,11 @@ function setupLetterButtons() {
         updateLetterButtonStates();
 
         if (state.filledPositions === 5) {
-          checkWinCondition();
+          if (isVeryHardMode()) {
+            checkVeryHardWinCondition();
+          } else {
+            checkWinCondition();
+          }
         }
       }
     });
@@ -613,6 +649,399 @@ function showAnswer() {
   });
 }
 
+// Very Hard mode functions
+
+// Check if current difficulty is Very Hard
+function isVeryHardMode() {
+  return getDifficulty() === 'veryhard';
+}
+
+// Update letter button visibility based on difficulty
+function updateLetterButtonVisibility() {
+  const letterButtonsContainer = document.querySelector('.letter-buttons');
+  if (letterButtonsContainer) {
+    if (isVeryHardMode()) {
+      letterButtonsContainer.style.display = 'none';
+    } else {
+      letterButtonsContainer.style.display = 'flex';
+    }
+  }
+}
+
+// Show Very Hard mode explainer popup
+function showVeryHardExplainer() {
+  // Remove existing explainer if present
+  const existingExplainer = document.getElementById('veryhard-explainer');
+  if (existingExplainer) {
+    existingExplainer.remove();
+  }
+
+  const modal = document.createElement('div');
+  modal.id = 'veryhard-explainer';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  `;
+
+  modal.innerHTML = `
+    <div style="
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      max-width: 350px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    ">
+      <h3 style="margin: 0 0 16px 0; font-size: 20px; font-weight: bold; color: #333;">Welcome to Very Hard Mode!</h3>
+      <p style="margin: 0 0 24px 0; color: #555; font-size: 15px; line-height: 1.6; text-align: left;">
+        In this mode, you are not given letters. Instead, click on an empty square and type any letter. The five letters you enter must form a valid five-letter word, and the grid must contain 5 valid five-letter words. Good luck!
+      </p>
+      <button id="veryhard-explainer-button" style="
+        width: 100%;
+        padding: 14px;
+        background-color: #10B981;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        text-transform: uppercase;
+      ">Let's Play!</button>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // Dismiss button
+  document.getElementById('veryhard-explainer-button').addEventListener('click', () => {
+    modal.remove();
+  });
+}
+
+// Create hidden input for keyboard in Very Hard mode
+function createHiddenKeyboardInput() {
+  let input = document.getElementById('veryhard-keyboard-input');
+  if (!input) {
+    input = document.createElement('input');
+    input.type = 'text';
+    input.id = 'veryhard-keyboard-input';
+    input.autocomplete = 'off';
+    input.autocapitalize = 'characters';
+    input.style.cssText = 'position: absolute; left: -9999px; top: 0; opacity: 0; width: 1px; height: 1px;';
+    document.body.appendChild(input);
+
+    // Handle input from keyboard
+    input.addEventListener('input', (e) => {
+      const letter = e.target.value.toUpperCase();
+      e.target.value = ''; // Clear input immediately
+
+      if (letter && /^[A-Z]$/.test(letter) && state.selectedCell) {
+        placeLetterInVeryHardMode(letter);
+      }
+    });
+
+    // Handle backspace
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && state.selectedCell) {
+        e.preventDefault();
+        removeLetterInVeryHardMode();
+      }
+    });
+  }
+  return input;
+}
+
+// Place a letter in the selected cell for Very Hard mode
+function placeLetterInVeryHardMode(letter) {
+  if (!state.selectedCell) return;
+
+  const cell = state.selectedCell;
+  const row = parseInt(cell.dataset.row);
+  const col = parseInt(cell.dataset.col);
+
+  // Check if this is a valid position
+  const isValidPosition = state.locsToBlankX.some((x, i) =>
+    x === row && state.locsToBlankY[i] === col
+  );
+
+  if (!isValidPosition) return;
+
+  // Check if this is an empty cell or a filled cell we can replace
+  const isEmpty = cell.classList.contains('empty-cell');
+  const isFilled = cell.classList.contains('player-placed');
+
+  if (!isEmpty && !isFilled) return;
+
+  // Update grid state
+  state.grid[row][col] = letter;
+
+  // Update cell display
+  cell.textContent = letter;
+  cell.classList.remove('highlighted', 'empty-cell');
+  cell.classList.add('player-placed');
+  cell.style.color = 'red';
+
+  // Clear selection
+  state.selectedCell = null;
+
+  // Recalculate filled positions
+  state.filledPositions = countFilledPositions();
+
+  // Check win condition when all 5 letters are placed
+  if (state.filledPositions === 5) {
+    checkVeryHardWinCondition();
+  }
+}
+
+// Remove a letter from the selected cell for Very Hard mode
+function removeLetterInVeryHardMode() {
+  if (!state.selectedCell) return;
+
+  const cell = state.selectedCell;
+  const row = parseInt(cell.dataset.row);
+  const col = parseInt(cell.dataset.col);
+
+  // Check if this cell has a player-placed letter
+  if (!cell.classList.contains('player-placed')) return;
+
+  // Reset the cell
+  state.grid[row][col] = ' ';
+  cell.textContent = ' ';
+  cell.classList.remove('player-placed', 'correct');
+  cell.classList.add('empty-cell');
+  cell.style.removeProperty('color');
+
+  // Keep the cell selected/highlighted for further input
+  cell.classList.add('highlighted');
+
+  // Update game state
+  state.filledPositions--;
+}
+
+// Extract a word from the grid based on type and index
+function getGridWord(type, index) {
+  let word = '';
+  if (type === 'row') {
+    for (let col = 0; col < 5; col++) {
+      word += state.grid[index][col];
+    }
+  } else if (type === 'col') {
+    for (let row = 0; row < 5; row++) {
+      word += state.grid[row][index];
+    }
+  } else if (type === 'diag1') {
+    // Top-left to bottom-right diagonal
+    for (let i = 0; i < 5; i++) {
+      word += state.grid[i][i];
+    }
+  } else if (type === 'diag2') {
+    // Bottom-left to top-right diagonal
+    for (let i = 0; i < 5; i++) {
+      word += state.grid[4 - i][i];
+    }
+  }
+  return word;
+}
+
+// Get positions of cells for a word
+function getWordPositions(type, index) {
+  const positions = [];
+  if (type === 'row') {
+    for (let col = 0; col < 5; col++) {
+      positions.push({ row: index, col: col });
+    }
+  } else if (type === 'col') {
+    for (let row = 0; row < 5; row++) {
+      positions.push({ row: row, col: index });
+    }
+  } else if (type === 'diag1') {
+    for (let i = 0; i < 5; i++) {
+      positions.push({ row: i, col: i });
+    }
+  } else if (type === 'diag2') {
+    for (let i = 0; i < 5; i++) {
+      positions.push({ row: 4 - i, col: i });
+    }
+  }
+  return positions;
+}
+
+// Check if a word is valid in the full word list
+function isValidFullWord(word) {
+  return wordListFull.includes(word.toLowerCase());
+}
+
+// Check if letters can form any valid word (in any order)
+function canFormValidWord(letters) {
+  const sortedLetters = letters.toLowerCase().split('').sort().join('');
+  return wordListFull.some(word => {
+    const sortedWord = word.split('').sort().join('');
+    return sortedWord === sortedLetters;
+  });
+}
+
+// Find the valid word that can be formed from the given letters (in any order)
+function findWordFromLetters(letters) {
+  const sortedLetters = letters.toLowerCase().split('').sort().join('');
+  return wordListFull.find(word => {
+    const sortedWord = word.split('').sort().join('');
+    return sortedWord === sortedLetters;
+  });
+}
+
+// Display the word formed by the player's letters below the grid
+function showPlayerWordDisplay(word) {
+  // Remove existing display if present
+  const existingDisplay = document.getElementById('player-word-display');
+  if (existingDisplay) {
+    existingDisplay.remove();
+  }
+
+  const display = document.createElement('div');
+  display.id = 'player-word-display';
+  display.style.cssText = `
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    color: #006400;
+    margin-top: 10px;
+    padding: 8px 16px;
+    background-color: #f0fff0;
+    border-radius: 8px;
+    border: 2px solid #006400;
+  `;
+  display.innerHTML = `Your word: <span style="font-size: 22px; letter-spacing: 2px;">${word}</span>`;
+
+  // Insert after the game board
+  const boardWrapper = document.querySelector('.board-wrapper');
+  if (boardWrapper) {
+    boardWrapper.insertAdjacentElement('afterend', display);
+  }
+}
+
+// Highlight the valid words found in Very Hard mode
+function highlightVeryHardWords(wordsToHighlight) {
+  // Define colors for each word
+  const colors = [
+    '#FF6B6B', // Red
+    '#4ECDC4', // Turquoise
+    '#45B7D1', // Light Blue
+    '#96CEB4', // Sage Green
+    '#FFBE0B'  // Yellow
+  ];
+
+  wordsToHighlight.forEach((wordInfo, index) => {
+    const positions = getWordPositions(wordInfo.type, wordInfo.index);
+    const color = colors[index % colors.length];
+
+    positions.forEach(pos => {
+      const cell = elements.gridboard.querySelector(`td[data-row="${pos.row}"][data-col="${pos.col}"]`);
+      if (cell) {
+        cell.style.backgroundColor = color;
+        cell.style.color = '#FFFFFF'; // White text for better contrast
+        cell.style.transition = 'background-color 0.3s ease';
+      }
+    });
+  });
+}
+
+// Check win condition for Very Hard mode
+function checkVeryHardWinCondition() {
+  // First, check if the entered letters can form a valid word (in any order)
+  let enteredLetters = '';
+  for (let i = 0; i < state.locsToBlankX.length; i++) {
+    const row = state.locsToBlankX[i];
+    const col = state.locsToBlankY[i];
+    enteredLetters += state.grid[row][col];
+  }
+
+  if (!canFormValidWord(enteredLetters)) {
+    showToast('Entered letters must form a valid 5-letter word!');
+    return;
+  }
+
+  const validWords = [];
+  const seenWords = new Set();
+
+  // Check all rows
+  for (let row = 0; row < 5; row++) {
+    const word = getGridWord('row', row);
+    if (isValidFullWord(word) && !seenWords.has(word)) {
+      seenWords.add(word);
+      validWords.push({ type: 'row', index: row, word: word });
+    }
+  }
+
+  // Check all columns
+  for (let col = 0; col < 5; col++) {
+    const word = getGridWord('col', col);
+    if (isValidFullWord(word) && !seenWords.has(word)) {
+      seenWords.add(word);
+      validWords.push({ type: 'col', index: col, word: word });
+    }
+  }
+
+  // Check diagonal 1 (top-left to bottom-right)
+  const diag1Word = getGridWord('diag1', 0);
+  if (isValidFullWord(diag1Word) && !seenWords.has(diag1Word)) {
+    seenWords.add(diag1Word);
+    validWords.push({ type: 'diag1', index: 0, word: diag1Word });
+  }
+
+  // Check diagonal 2 (bottom-left to top-right)
+  const diag2Word = getGridWord('diag2', 0);
+  if (isValidFullWord(diag2Word) && !seenWords.has(diag2Word)) {
+    seenWords.add(diag2Word);
+    validWords.push({ type: 'diag2', index: 0, word: diag2Word });
+  }
+
+  // Check if we have at least 5 valid unique words
+  if (validWords.length >= 5) {
+    // Take the first 5 valid words
+    const wordsToHighlight = validWords.slice(0, 5);
+
+    // Calculate solve time
+    const solveTimeSeconds = Math.floor((Date.now() - state.gameStartTime) / 1000);
+
+    // Pause the timer
+    pauseTimer();
+
+    // Clear any selections
+    if (state.selectedCell) {
+      state.selectedCell.classList.remove('highlighted');
+      state.selectedCell = null;
+    }
+
+    // Update statistics
+    updateStatistics(solveTimeSeconds);
+
+    // Highlight the valid words
+    highlightVeryHardWords(wordsToHighlight);
+
+    // Show win message
+    showWinMessage();
+
+    // Display the word formed by player's letters below the grid
+    const formedWord = findWordFromLetters(enteredLetters);
+    if (formedWord) {
+      showPlayerWordDisplay(formedWord.toUpperCase());
+    }
+  } else {
+    // Not enough valid words - show error toast
+    showToast('Could not find 5 valid words!');
+  }
+}
+
 // Reset letter buttons and clear player placed letters
 function resetLetterButtons() {
   // Existing reset code stays the same
@@ -657,6 +1086,15 @@ function resetLetterButtons() {
   if (winMessage) {
     winMessage.remove();
   }
+
+  // Remove player word display if present (from Very Hard mode)
+  const playerWordDisplay = document.getElementById('player-word-display');
+  if (playerWordDisplay) {
+    playerWordDisplay.remove();
+  }
+
+  // Update letter button visibility (for Very Hard mode)
+  updateLetterButtonVisibility();
 }
 
 // Add this function to track word positions during placement
@@ -1040,6 +1478,9 @@ async function initializeGame() {
   // Reset and resume timer for the new puzzle
   resetTimer();
   resumeTimer();
+
+  // Update letter button visibility based on difficulty
+  updateLetterButtonVisibility();
 }
 // Event Listeners
 elements.newPuzzleButton.addEventListener('click', () => {
@@ -1053,6 +1494,9 @@ elements.showAnswerButton.addEventListener('click', showAnswer);
 
 // Call the main function to initialize
 initializeGame();
+
+// Create hidden input for Very Hard mode keyboard
+createHiddenKeyboardInput();
 
 // Create and append help modal to document
 function createHelpModal() {
@@ -1248,6 +1692,7 @@ function updateStatsDisplay() {
         <option value="easy" ${currentDifficulty === 'easy' ? 'selected' : ''}>Easy (500 words)</option>
         <option value="medium" ${currentDifficulty === 'medium' ? 'selected' : ''}>Medium (1000 words)</option>
         <option value="hard" ${currentDifficulty === 'hard' ? 'selected' : ''}>Hard (3500+ words)</option>
+        <option value="veryhard" ${currentDifficulty === 'veryhard' ? 'selected' : ''}>Very Hard (no letters given)</option>
       </select>
     </div>
     <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
@@ -1274,6 +1719,11 @@ function updateStatsDisplay() {
       saveDifficulty(newDifficulty);
       // Show a message that the change will take effect on next puzzle
       alert('Difficulty changed! Start a new puzzle to use the selected difficulty.');
+
+      // Show Very Hard mode explainer if selected
+      if (newDifficulty === 'veryhard') {
+        showVeryHardExplainer();
+      }
     });
   }
 

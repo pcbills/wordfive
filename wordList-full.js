@@ -1,4 +1,4 @@
-const wordListFull = [
+export const wordListFull = [
   "cigar",
   "rebut",
   "sissy",
