@@ -24,7 +24,7 @@ body {
 
 /* Header styles */
 .game-header {
-  text-align: left;
+  text-align: center;
   padding: 5px 0;
   margin-bottom: 10px;
   border-bottom: 1px solid var(--color-border);
