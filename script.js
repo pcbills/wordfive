@@ -34,6 +34,7 @@ const elements = {
   },
   newPuzzleButton: document.getElementById('new-puzzle-button'),
   resetButton: document.getElementById('reset-button'),
+  hintButton: document.getElementById('hint-button'),
   showAnswerButton: document.getElementById('show-answer-button'),
   tryNumberfiveButton: document.getElementById('try-numberfive-button')
 };
@@ -647,6 +648,120 @@ function showAnswer() {
   Object.values(elements.letterButtons).forEach(button => {
     button.disabled = true;
   });
+}
+
+// Give a hint by placing one correct letter
+function giveHint() {
+  // Get coordinates of blank spaces and correct letters
+  const blankCoords = state.locsToBlankX.map((row, index) => ({
+    row,
+    col: state.locsToBlankY[index],
+    correctLetter: state.correctWord[index]
+  }));
+
+  // Find the first blank position that doesn't have the correct letter
+  let hintPosition = null;
+  for (let i = 0; i < blankCoords.length; i++) {
+    const coord = blankCoords[i];
+    const currentLetter = state.grid[coord.row][coord.col];
+
+    // If the cell is empty or has the wrong letter, this is where we'll place the hint
+    if (currentLetter === ' ' || currentLetter !== coord.correctLetter) {
+      hintPosition = coord;
+      break;
+    }
+  }
+
+  // If no position found (all correct), nothing to do
+  if (!hintPosition) {
+    return;
+  }
+
+  // If the position has a wrong letter, remove it first
+  const currentLetter = state.grid[hintPosition.row][hintPosition.col];
+  if (currentLetter !== ' ') {
+    // Clear just this cell (remove the wrong letter)
+    state.grid[hintPosition.row][hintPosition.col] = ' ';
+    const cellToClear = elements.gridboard.rows[hintPosition.row].cells[hintPosition.col];
+    cellToClear.textContent = ' ';
+    cellToClear.classList.remove('player-placed', 'correct');
+    cellToClear.classList.add('empty-cell');
+    cellToClear.style.removeProperty('color');
+
+    // Re-enable the button that had this wrong letter
+    const buttonToEnable = Object.values(elements.letterButtons).find(button =>
+      button.textContent === currentLetter && button.disabled
+    );
+    if (buttonToEnable) {
+      buttonToEnable.disabled = false;
+    }
+  }
+
+  // Check if the hint letter is already placed elsewhere (in wrong position)
+  // and remove it to prevent duplicates
+  for (let i = 0; i < blankCoords.length; i++) {
+    const coord = blankCoords[i];
+    const placedLetter = state.grid[coord.row][coord.col];
+
+    // Skip the hint position itself
+    if (coord.row === hintPosition.row && coord.col === hintPosition.col) {
+      continue;
+    }
+
+    // If this letter matches the hint letter and it's in the wrong spot, remove it
+    if (placedLetter === hintPosition.correctLetter && placedLetter !== coord.correctLetter) {
+      // Clear this cell
+      state.grid[coord.row][coord.col] = ' ';
+      const cellToRemove = elements.gridboard.rows[coord.row].cells[coord.col];
+      cellToRemove.textContent = ' ';
+      cellToRemove.classList.remove('player-placed', 'correct');
+      cellToRemove.classList.add('empty-cell');
+      cellToRemove.style.removeProperty('color');
+
+      // Re-enable the button with this letter
+      const buttonToEnable = Object.values(elements.letterButtons).find(button =>
+        button.textContent === placedLetter && button.disabled
+      );
+      if (buttonToEnable) {
+        buttonToEnable.disabled = false;
+      }
+
+      break; // Only remove one instance
+    }
+  }
+
+  // Place the correct letter in the hint position
+  state.grid[hintPosition.row][hintPosition.col] = hintPosition.correctLetter;
+
+  // Get the cell and update its appearance
+  const cell = elements.gridboard.rows[hintPosition.row].cells[hintPosition.col];
+  cell.textContent = hintPosition.correctLetter;
+  cell.classList.remove('empty-cell');
+  cell.classList.add('player-placed');
+  cell.style.color = '#0000FF'; // Blue color like regular player-placed letters
+
+  // Disable one button with this letter (for double letter handling)
+  const buttonToDisable = Object.values(elements.letterButtons).find(button =>
+    button.textContent === hintPosition.correctLetter && !button.disabled
+  );
+  if (buttonToDisable) {
+    buttonToDisable.disabled = true;
+  }
+
+  // Update filled positions count
+  state.filledPositions = countFilledPositions();
+
+  // Update letter button states
+  updateLetterButtonStates();
+
+  // Check if puzzle is complete
+  if (state.filledPositions === 5) {
+    if (isVeryHardMode()) {
+      checkVeryHardWinCondition();
+    } else {
+      checkWinCondition();
+    }
+  }
 }
 
 // Very Hard mode functions
@@ -1490,6 +1605,7 @@ elements.newPuzzleButton.addEventListener('click', () => {
 });
 
 elements.resetButton.addEventListener('click', resetLetterButtons);
+elements.hintButton.addEventListener('click', giveHint);
 elements.showAnswerButton.addEventListener('click', showAnswer);
 
 // Call the main function to initialize
@@ -1562,6 +1678,7 @@ function createHelpModal() {
             <h3 class="font-bold mb-2">Controls:</h3>
             <ul class="list-disc pl-5 space-y-2">
               <li><strong>Reset:</strong> Clear your placed letters to try again.</li>
+              <li><strong>Hint:</strong> Places one correct letter in the grid. If the position has an incorrect letter, it will be replaced with the correct one.</li>
               <li><strong>New Puzzle:</strong> Start a completely new puzzle.</li>
               <li><strong>Show Answer:</strong> Show the correct answer to the puzzle.</li>
             </ul>
