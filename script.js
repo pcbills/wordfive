@@ -48,7 +48,7 @@ function getCurrentWordList() {
       return wordListMedium;
     case 'hard':
     case 'veryhard':
-      return wordListFull;
+      return wordListHard;
     default:
       return wordListMedium;
   }
