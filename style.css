@@ -200,6 +200,21 @@ body {
     background-color: #666666;
 }
 
+/* Daily puzzle button styles */
+#daily-puzzle-button {
+    background-color: #f97316; /* Orange */
+}
+
+#daily-puzzle-button:hover {
+    background-color: #ea580c; /* Darker orange on hover */
+}
+
+#daily-puzzle-button:disabled {
+    background-color: #9ca3af; /* Gray when completed */
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
 /* Responsive adjustments */
 @media (max-width: 400px) {
     .control-button {
