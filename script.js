@@ -1647,20 +1647,20 @@ function createHelpModal() {
         <h2 class="text-xl font-bold mb-4">How to Play Wordfive</h2>
         <div class="space-y-4">
           <p>
-            Wordfive is a bit like Wordle meets sudoku. 
+            Wordfive is a bit like word search meets sudoku. 
           </p>
           <br>
           <p>
-            You have to find how the letters below the grid fit back into the blank spaces such that there are five 5-letter words in the grid.
+            You have to find how the letters below the grid fit back into the blank spaces such that there are 5 five-letter words in the grid.
           </p>
 
           <div>
             <h3 class="font-bold mb-2">Game Rules:</h3>
             <ul class="list-disc pl-5 space-y-2">
-              <li>The grid contains five 5-letter words placed horizontally, vertically, or diagonally.</li>
+              <li>The grid contains 5 five-letter words placed horizontally, vertically, or diagonally.</li>
               <li>Five letters have been removed from these words, creating empty spaces.</li>
-              <li>These removed letters form a sixth 5-letter word.</li>
-              <li>Your goal is to fit the letters back into the grid by placing the provided letters in the correct empty spaces to recreate the complete grid with five 5-letter words.</li>
+              <li>These removed letters form a 6th five-letter word.</li>
+              <li>Your goal is to fit the letters back into the grid by placing the provided letters in the correct empty spaces to recreate the complete grid with 5 five-letter words.</li>
             </ul>
           </div>
 
