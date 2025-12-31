@@ -2016,6 +2016,9 @@ elements.newPuzzleButton.addEventListener('click', () => {
 elements.resetButton.addEventListener('click', resetLetterButtons);
 elements.hintButton.addEventListener('click', giveHint);
 elements.showAnswerButton.addEventListener('click', showAnswer);
+elements.dailyPuzzleButton.addEventListener('click', () => {
+  startDailyPuzzle();
+});
 
 // Call the main function to initialize
 initializeGame();
@@ -2288,14 +2291,6 @@ document.addEventListener('DOMContentLoaded', () => {
   updateTimerDisplay();
   updateDailyPuzzleButton();
   cleanupOldDailyPuzzles();
-
-  // Daily puzzle button click handler
-  const dailyButton = document.getElementById('daily-puzzle-button');
-  if (dailyButton) {
-    dailyButton.addEventListener('click', () => {
-      startDailyPuzzle();
-    });
-  }
 });
 
 // Add share button to DOM after control buttons
