@@ -1484,6 +1484,7 @@ function placeInitialWords() {
   while (state.finalWordCount < 5) {
     placeNextWord();
   }
+  return true; // Return true on success
 }
 
 function placeFirstWord() {
@@ -1672,6 +1673,7 @@ function findSixthWord() {
       }
     }
   }
+  return true; // Return true on success
 }
 
 // Process letter locations for sixth word
