@@ -19,8 +19,56 @@ const state = {
   correctWord: '', // Will store the sixth word for checking
   filledPositions: 0,// Track how many blanks have been filled
   wordPositions: [],
-  gameStartTime: null // Track when the current puzzle started
+  gameStartTime: null, // Track when the current puzzle started
+  // Daily puzzle state
+  isDailyPuzzle: false,
+  dailySolveTime: null
 };
+
+// Seeded Random Generator for Daily Puzzle
+class SeededRandom {
+  constructor(seed) {
+    this.seed = seed;
+  }
+
+  // Simple mulberry32 algorithm for seeded random
+  next() {
+    let t = this.seed += 0x6D2B79F5;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  }
+
+  // Get random integer between 0 and max (exclusive)
+  nextInt(max) {
+    return Math.floor(this.next() * max);
+  }
+
+  // Shuffle array using Fisher-Yates with seeded random
+  shuffle(array) {
+    const result = [...array];
+    for (let i = result.length - 1; i > 0; i--) {
+      const j = this.nextInt(i + 1);
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
+  }
+}
+
+// Get daily seed from current date
+function getDailySeed() {
+  const today = new Date();
+  return today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+}
+
+// Helper function to get today's date string for localStorage keys
+function getTodayDateString() {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 // DOM Elements
 const elements = {
@@ -36,6 +84,7 @@ const elements = {
   resetButton: document.getElementById('reset-button'),
   hintButton: document.getElementById('hint-button'),
   showAnswerButton: document.getElementById('show-answer-button'),
+  dailyPuzzleButton: document.getElementById('daily-puzzle-button'),
   tryNumberfiveButton: document.getElementById('try-numberfive-button')
 };
 
@@ -128,6 +177,67 @@ function getTimerVisibility() {
   return saved !== null ? JSON.parse(saved) : false;
 }
 
+// Daily Puzzle Storage Functions
+function getDailyPuzzleKey() {
+  return `wordfive-daily-${getTodayDateString()}`;
+}
+
+function getDailyPuzzleState() {
+  const key = getDailyPuzzleKey();
+  const saved = localStorage.getItem(key);
+  return saved ? JSON.parse(saved) : null;
+}
+
+function saveDailyPuzzleState() {
+  const key = getDailyPuzzleKey();
+  const puzzleState = {
+    grid: state.grid,
+    locsToBlankX: state.locsToBlankX,
+    locsToBlankY: state.locsToBlankY,
+    lettersRemoved: state.lettersRemoved,
+    correctWord: state.correctWord,
+    filledPositions: state.filledPositions,
+    wordPositions: state.wordPositions,
+    finalWordList: state.finalWordList,
+    elapsedTime: state.gameStartTime ? Math.floor((Date.now() - state.gameStartTime) / 1000) : 0,
+    completed: false
+  };
+  localStorage.setItem(key, JSON.stringify(puzzleState));
+}
+
+function isDailyPuzzleCompletedToday() {
+  const saved = getDailyPuzzleState();
+  return saved && saved.completed === true;
+}
+
+function markDailyPuzzleComplete(solveTime) {
+  const key = getDailyPuzzleKey();
+  const saved = getDailyPuzzleState() || {};
+  saved.completed = true;
+  saved.solveTime = solveTime;
+  localStorage.setItem(key, JSON.stringify(saved));
+}
+
+// Clean up old daily puzzle data (keep only last 7 days)
+function cleanupOldDailyPuzzles() {
+  const today = new Date();
+  const keysToCheck = [];
+
+  // Generate keys for the past 30 days to check for cleanup
+  for (let i = 8; i < 30; i++) {
+    const pastDate = new Date(today);
+    pastDate.setDate(pastDate.getDate() - i);
+    const year = pastDate.getFullYear();
+    const month = String(pastDate.getMonth() + 1).padStart(2, '0');
+    const day = String(pastDate.getDate()).padStart(2, '0');
+    keysToCheck.push(`wordfive-daily-${year}-${month}-${day}`);
+  }
+
+  keysToCheck.forEach(key => {
+    localStorage.removeItem(key);
+  });
+}
+
 // Timer display functions
 let timerInterval = null;
 let timerPaused = false;
@@ -215,6 +325,15 @@ function updateTimerText(seconds) {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   timerDiv.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
+// Start timer for daily puzzle (runs in background, display controlled by user settings)
+function startDailyTimer() {
+  // Just ensure timer interval is running for timing purposes
+  // Display is controlled by user's timer visibility setting
+  if (!timerInterval && state.gameStartTime) {
+    startTimerInterval();
+  }
 }
 
 // Create initial empty grid
@@ -342,6 +461,12 @@ function setupLetterButtons() {
 
           // Update game state
           state.filledPositions--;
+
+          // Save daily puzzle state if in daily mode
+          if (state.isDailyPuzzle) {
+            saveDailyPuzzleState();
+          }
+
           updateLetterButtonStates();
         }
         return;
@@ -391,6 +516,11 @@ function setupLetterButtons() {
 
         // Recalculate filled positions
         state.filledPositions = countFilledPositions();
+
+        // Save daily puzzle state if in daily mode
+        if (state.isDailyPuzzle) {
+          saveDailyPuzzleState();
+        }
 
         // Update letter button states considering repeat letters
         updateLetterButtonStates();
@@ -510,14 +640,14 @@ function updateLetterButtonStates() {
   });
 }
 //create and display win message
-function showWinMessage() {
+function showWinMessage(solveTimeSeconds) {
   // Create win message element if it doesn't exist
   if (!document.getElementById('win-message')) {
     const messageDiv = document.createElement('div');
     messageDiv.id = 'win-message';
     messageDiv.style.cssText = `
       position: fixed;
-      top: 25%;
+      top: 35%;
       left: 50%;
       transform: translate(-50%, -50%);
       background-color: rgba(255, 255, 255, 0.9);
@@ -527,16 +657,87 @@ function showWinMessage() {
       font-size: 24px;
       color: #4CAF50;
       text-align: center;
-      z-index: 1000;
+      z-index: 30;
     `;
-    messageDiv.textContent = ['You are so smart!', 'You win!', 'That\'s Wordfive!'][Math.floor(Math.random() * 3)];
+
+    // Check if this is a daily puzzle victory
+    if (state.isDailyPuzzle && solveTimeSeconds !== undefined) {
+      // Format today's date
+      const today = new Date();
+      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'];
+      const month = monthNames[today.getMonth()];
+      const day = today.getDate();
+      const year = today.getFullYear();
+
+      // Create message container
+      const messageText = document.createElement('div');
+      messageText.style.marginBottom = '15px';
+      messageText.textContent = `You solved the daily puzzle for ${month} ${day}, ${year} in ${solveTimeSeconds} seconds! Congratulations!`;
+      messageDiv.appendChild(messageText);
+
+      // Create share button for daily puzzle
+      const shareButton = document.createElement('button');
+      shareButton.textContent = 'Share Result';
+      shareButton.style.cssText = `
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        background-color: #2196F3;
+        color: white;
+        font-size: 0.9rem;
+        font-weight: bold;
+        cursor: pointer;
+        text-transform: uppercase;
+        margin-top: 10px;
+      `;
+      shareButton.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent dismissing the message
+        shareDailyResult(solveTimeSeconds);
+      });
+      messageDiv.appendChild(shareButton);
+
+      // Mark daily puzzle as complete
+      markDailyPuzzleComplete(solveTimeSeconds);
+      updateDailyPuzzleButton();
+
+      // Exit daily puzzle mode
+      state.isDailyPuzzle = false;
+    } else {
+      // Regular puzzle - show random affirmation
+      messageDiv.textContent = getRandomAffirmation();
+      messageDiv.style.cursor = 'pointer';
+    }
+
     document.body.appendChild(messageDiv);
 
-    // Remove message after 3 seconds
+    // Remove message when user taps anywhere (but not on share button)
+    const dismissMessage = (e) => {
+      if (e.target.tagName !== 'BUTTON') {
+        messageDiv.remove();
+        document.removeEventListener('click', dismissMessage);
+      }
+    };
+
+    // Use setTimeout to add listener after a brief delay to prevent immediate dismissal
     setTimeout(() => {
-      messageDiv.remove();
-    }, 3000);
+      document.addEventListener('click', dismissMessage);
+    }, 100);
   }
+}
+
+// Helper function to get random affirmation
+function getRandomAffirmation() {
+  return ['You are so smart!', 'You win!', 'That\'s Wordfive!'][Math.floor(Math.random() * 3)];
+}
+
+// Share daily puzzle result
+function shareDailyResult(solveTimeSeconds) {
+  const shareText = `I solved today's Wordfive in ${solveTimeSeconds} seconds. Can you beat my time? https://playwordfive.com`;
+
+  navigator.clipboard.writeText(shareText)
+    .then(() => showToast('Copied to clipboard!'))
+    .catch(err => showToast('Failed to copy to clipboard'));
 }
 //function to check for win
 // Modify the checkWinCondition function
@@ -565,8 +766,8 @@ function checkWinCondition() {
     highlightCorrectLetters();
     // Highlight the first five words
     highlightAllWords();
-    // Show win message
-    showWinMessage();
+    // Show win message (pass solve time for daily puzzle display)
+    showWinMessage(solveTimeSeconds);
   }
 }
 
@@ -912,6 +1113,11 @@ function placeLetterInVeryHardMode(letter) {
   // Recalculate filled positions
   state.filledPositions = countFilledPositions();
 
+  // Save daily puzzle state if in daily mode
+  if (state.isDailyPuzzle) {
+    saveDailyPuzzleState();
+  }
+
   // Check win condition when all 5 letters are placed
   if (state.filledPositions === 5) {
     checkVeryHardWinCondition();
@@ -941,6 +1147,11 @@ function removeLetterInVeryHardMode() {
 
   // Update game state
   state.filledPositions--;
+
+  // Save daily puzzle state if in daily mode
+  if (state.isDailyPuzzle) {
+    saveDailyPuzzleState();
+  }
 }
 
 // Extract a word from the grid based on type and index
@@ -1143,8 +1354,8 @@ function checkVeryHardWinCondition() {
     // Highlight the valid words
     highlightVeryHardWords(wordsToHighlight);
 
-    // Show win message
-    showWinMessage();
+    // Show win message (pass solve time for daily puzzle display)
+    showWinMessage(solveTimeSeconds);
 
     // Display the word formed by player's letters below the grid
     const formedWord = findWordFromLetters(enteredLetters);
@@ -1597,8 +1808,206 @@ async function initializeGame() {
   // Update letter button visibility based on difficulty
   updateLetterButtonVisibility();
 }
+
+// Reset full game state (used by daily puzzle generation)
+function resetFullGameState() {
+  Object.assign(state, {
+    grid: Array(5).fill().map(() => Array(5).fill('_')),
+    finalWordList: [],
+    stsqRowList: [],
+    stsqColList: [],
+    finalWordCount: 0,
+    wordPositions: [],
+    locsToBlankX: [],
+    locsToBlankY: [],
+    lettersRemoved: [],
+    correctWord: '',
+    filledPositions: 0
+  });
+}
+
+// Daily Puzzle Functions
+
+// Generate daily puzzle using seeded random
+async function generateDailyPuzzle() {
+  const seed = getDailySeed();
+  const seededRandom = new SeededRandom(seed);
+
+  // Store original Math.random
+  const originalRandom = Math.random;
+
+  // Override Math.random with seeded version
+  Math.random = () => seededRandom.next();
+
+  // Force use of wordListHard for daily puzzle
+  const originalWordList = state.wordList;
+  state.wordList = [...wordListHard];
+
+  const MAX_FULL_RETRIES = 10;
+  let fullRetries = 0;
+  let puzzleGenerated = false;
+
+  // Create empty grid first
+  createEmptyGrid();
+
+  while (!puzzleGenerated && fullRetries < MAX_FULL_RETRIES) {
+    // Reset state for this attempt
+    resetFullGameState();
+    state.wordList = [...wordListHard]; // Restore wordList after reset
+
+    // Place initial words
+    const wordsPlaced = placeInitialWords();
+
+    if (!wordsPlaced) {
+      fullRetries++;
+      continue;
+    }
+
+    // Find and place sixth word
+    const sixthWordFound = findSixthWord();
+
+    if (!sixthWordFound) {
+      fullRetries++;
+      continue;
+    }
+
+    puzzleGenerated = true;
+  }
+
+  // Fill remaining spaces
+  fillRemainingSpaces();
+
+  // Restore original Math.random
+  Math.random = originalRandom;
+
+  // Update display
+  updateGridDisplay();
+
+  // Update letter button visibility - hide if Very Hard mode
+  if (isVeryHardMode()) {
+    const letterButtonsContainer = document.querySelector('.letter-buttons');
+    if (letterButtonsContainer) {
+      letterButtonsContainer.style.display = 'none';
+    }
+  } else {
+    const letterButtonsContainer = document.querySelector('.letter-buttons');
+    if (letterButtonsContainer) {
+      letterButtonsContainer.style.display = 'flex';
+    }
+  }
+}
+
+// Restore daily puzzle state from saved data
+function restoreDailyPuzzleState(savedState) {
+  // Restore grid
+  state.grid = savedState.grid;
+  state.locsToBlankX = savedState.locsToBlankX;
+  state.locsToBlankY = savedState.locsToBlankY;
+  state.lettersRemoved = savedState.lettersRemoved;
+  state.correctWord = savedState.correctWord;
+  state.filledPositions = savedState.filledPositions;
+  state.wordPositions = savedState.wordPositions;
+  state.finalWordList = savedState.finalWordList;
+
+  // Calculate game start time based on elapsed time
+  state.gameStartTime = Date.now() - (savedState.elapsedTime * 1000);
+
+  // Update display
+  updateGridDisplay();
+
+  // Update letter buttons to show remaining letters
+  const placedLetters = [];
+  state.locsToBlankX.forEach((row, index) => {
+    const col = state.locsToBlankY[index];
+    const letter = state.grid[row][col];
+    if (letter !== ' ') {
+      placedLetters.push(letter);
+    }
+  });
+
+  // Reset letter buttons first
+  resetLetterButtons();
+
+  // Set letter button text to the removed letters
+  const letterButtons = Object.values(elements.letterButtons);
+  state.lettersRemoved.forEach((letter, index) => {
+    if (letterButtons[index]) {
+      letterButtons[index].textContent = letter;
+    }
+  });
+
+  // Disable buttons for letters already placed
+  updateButtonStates();
+
+  // Update letter button visibility - hide if Very Hard mode
+  if (isVeryHardMode()) {
+    const letterButtonsContainer = document.querySelector('.letter-buttons');
+    if (letterButtonsContainer) {
+      letterButtonsContainer.style.display = 'none';
+    }
+  } else {
+    const letterButtonsContainer = document.querySelector('.letter-buttons');
+    if (letterButtonsContainer) {
+      letterButtonsContainer.style.display = 'flex';
+    }
+  }
+}
+
+// Helper function to update button states after restoring
+function updateButtonStates() {
+  updateLetterButtonStates();
+}
+
+// Start or resume daily puzzle
+async function startDailyPuzzle() {
+  // Set daily puzzle mode
+  state.isDailyPuzzle = true;
+  state.selectedCell = null;
+
+  // Check if we have a saved daily puzzle to resume
+  const savedState = getDailyPuzzleState();
+
+  if (savedState && !savedState.completed) {
+    // Resume saved puzzle
+    restoreDailyPuzzleState(savedState);
+  } else {
+    // Generate new daily puzzle
+    await generateDailyPuzzle();
+    state.gameStartTime = Date.now();
+  }
+
+  // Start timer for daily puzzle (runs in background)
+  startDailyTimer();
+
+  // Save initial state
+  saveDailyPuzzleState();
+}
+
+// Update daily puzzle button based on completion status
+function updateDailyPuzzleButton() {
+  const button = elements.dailyPuzzleButton;
+  if (!button) return;
+
+  if (isDailyPuzzleCompletedToday()) {
+    button.textContent = 'Daily Complete \u2713';
+    button.disabled = true;
+  } else {
+    button.textContent = 'Daily Puzzle';
+    button.disabled = false;
+  }
+}
+
+// Exit daily puzzle mode (called when starting new puzzle)
+function exitDailyPuzzleMode() {
+  if (!state.isDailyPuzzle) return;
+  state.isDailyPuzzle = false;
+}
+
 // Event Listeners
 elements.newPuzzleButton.addEventListener('click', () => {
+  // Exit daily puzzle mode if active
+  exitDailyPuzzleMode();
+
   state.selectedCell = null;
   initializeGame();
   resetLetterButtons();
@@ -1877,6 +2286,16 @@ document.addEventListener('DOMContentLoaded', createStatsModal);
 // Initialize timer display
 document.addEventListener('DOMContentLoaded', () => {
   updateTimerDisplay();
+  updateDailyPuzzleButton();
+  cleanupOldDailyPuzzles();
+
+  // Daily puzzle button click handler
+  const dailyButton = document.getElementById('daily-puzzle-button');
+  if (dailyButton) {
+    dailyButton.addEventListener('click', () => {
+      startDailyPuzzle();
+    });
+  }
 });
 
 // Add share button to DOM after control buttons
